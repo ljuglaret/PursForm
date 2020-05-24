@@ -28,7 +28,8 @@ type Details = {
                   reponse :: Reponse 
                   ,nom    :: String
                   ,id     :: Int
-                  ,correct :: Boolean }
+                  ,correct :: Boolean
+                  ,coeff :: Number }
 
 type Resume = {numeroQuestion :: Int
               ,listeDesReponses ::Array Details}
@@ -47,7 +48,7 @@ showQuestion question =
 showReponse :: EnregistreReponse -> Resume -> Int ->  String
 showReponse reponseCherchee reponses numero =
     case  head (filter(\record -> record.reponse == reponseCherchee.reponse && reponseCherchee.numQ == numero) reponses.listeDesReponses) of 
-                                Just tete -> tete.nom
+                                Just tete -> tete.nom 
                                 Nothing -> ""
 
 indexUnsafe ::  Array Resume   -> Int -> Resume
@@ -124,14 +125,36 @@ bonneReponseDonnee reponseDonnee reponsesFormulaires =
     {numQ : reponseDonnee.numQ, rep:  associe reponsesFormulaires reponseDonnee.reponse reponseDonnee.numQ }  
     (distribue  (reponsesCorrectes reponsesFormulaires)) == 1
 
-score :: Array EnregistreReponse ->  Array Resume ->   Int 
+coeffDuneReponse :: EnregistreReponse -> Array Resume -> Number
+coeffDuneReponse reponseE formulaire   = 
+  let 
+    questionFormulaireCorrespondante = 
+        filter
+          (\elementListe -> elementListe.numeroQuestion == reponseE.numQ)
+          formulaire
+    reponseCorrespondante = 
+        map 
+            (\question -> filter (\el -> el.reponse == reponseE.reponse)   question.listeDesReponses)
+            questionFormulaireCorrespondante
+    
+    tete = case head questionFormulaireCorrespondante of 
+              Just val -> val 
+              Nothing -> reponsesQ1
+    in 
+      case (head tete.listeDesReponses) of 
+        Just val -> val.coeff 
+        Nothing -> 0.0
+       
+    
+
+score :: Array EnregistreReponse ->  Array Resume ->   Number
 score reponsesDonnees reponsesFormulaire = 
   foldr (\repf  accScore  -> 
     if bonneReponseDonnee repf reponsesFormulaire
-    then  accScore + 1
-    else  accScore -   1 
+    then  accScore +  1.0 --(coeffDuneReponse repf reponsesFormulaire)
+    else  accScore -   0.5 --(coeffDuneReponse repf reponsesFormulaire)
     )
-    0
+    0.0
     reponsesDonnees
 
 correctionQ reponsesDonnees reponsesFormulaire = 
@@ -158,11 +181,11 @@ reponsesQ1 :: Resume
 reponsesQ1 = 
   {numeroQuestion : 1
   ,listeDesReponses :[
-    {reponse : Reponse1 , nom : "Chien",  id: 0, correct : true},
-    {reponse : Reponse2  , nom : "Lezard" , id: 1, correct : false},
-    {reponse  : Reponse3 , nom : "Chat", id: 2, correct : true},
-    {reponse  : Reponse4 , nom : "Zebre", id: 3, correct : true},
-    {reponse : Reponse5 , nom : "Poisson", id: 4, correct : false}
+    {reponse : Reponse1 , nom : "Chien",  id: 0, correct : true,coeff : 1.0/5.0},
+    {reponse : Reponse2  , nom : "Lezard" , id: 1, correct : false,coeff : 1.0/5.0},
+    {reponse  : Reponse3 , nom : "Chat", id: 2, correct : true,coeff : 1.0/5.0},
+    {reponse  : Reponse4 , nom : "Zebre", id: 3, correct : true,coeff: 1.0/5.0},
+    {reponse : Reponse5 , nom : "Poisson", id: 4, correct : false,coeff: 1.0/5.0}
     ]
   }
 
@@ -172,10 +195,10 @@ reponsesQ2 =
   {numeroQuestion : 2
   ,listeDesReponses : [
   
-  {reponse : Reponse1  , nom : "Cheval" , id: 0, correct : false}
-  ,{reponse : Reponse2 , nom : "Autruche",  id: 1, correct : true}
-  ,{reponse : Reponse3  , nom : "Elephant" , id: 2, correct : true}
-  ,{reponse : Reponse4  , nom : "Chien" , id: 3, correct : false}]
+  {reponse : Reponse1  , nom : "Cheval" , id: 0, correct : false, coeff: 1.0/4.0}
+  ,{reponse : Reponse2 , nom : "Autruche",  id: 1, correct : true, coeff: 1.0/4.0}
+  ,{reponse : Reponse3  , nom : "Elephant" , id: 2, correct : true, coeff: 1.0/4.0}
+  ,{reponse : Reponse4  , nom : "Chien" , id: 3, correct : false, coeff: 1.0/4.0}]
   }
 
 listReponses = [reponsesQ1, reponsesQ2]

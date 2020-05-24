@@ -1,0 +1,8 @@
+ {"numeroQuestion" : "2"
+  ,"listeDesReponses " : [
+  
+  {"reponse" : "Reponse1"  , "nom" : "Cheval" , "id" : "0", "correct" : "false", "coeff" : "1.0"}
+  ,{"reponse" : "Reponse2" , "nom" : "Autruche",  "id": "1", "correct" : "true", "coeff": "1.0"}
+  ,{"reponse" : "Reponse3"  , "nom" : "Elephant" , "id": "2", "correct" : "true", "coeff": "1.0"}
+  ,{"reponse" : "Reponse4"  , "nom" : "Chien" , "id": "3", "correct" : "false", "coeff": "1.0"}]
+  }
