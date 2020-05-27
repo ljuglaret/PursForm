@@ -1,7 +1,7 @@
 module Form where
 
 import Prelude 
-import Data.Array(cons , length)
+import Data.Array(cons , length, last,sort,head)
 import Data.Foldable(foldr)
 import Data.Const (Const)
 import Data.Maybe (Maybe(..)) 
@@ -18,7 +18,7 @@ type ListeDesScores = Array Number
 
 data Stage =  
             Presentation
-            |Formulaire        (Array EnregistreReponse) ListeDesScores  NombreDessais 
+            |Formulaire        (Array EnregistreReponse)  ListeDesScores  NombreDessais 
             |ResultatUnePartie  (Array EnregistreReponse) ListeDesScores  NombreDessais 
             |ScoreFinal         ListeDesScores
 
@@ -49,29 +49,29 @@ initialState = { stage : Presentation}
 
 update :: forall m. Msg -> H.HalogenM State Msg () Void m Unit
 update(StockeReponse  newReponse listeDesReponse numQuestion scores nbEssais) =
-    H.modify_ _{ stage = 
+  
+  H.modify_ _{ stage = 
       Formulaire
-        (enleveDeclic(cons { numQ : numQuestion, reponse : newReponse }  listeDesReponse))
-        scores 
-        nbEssais}
-
+         (enleveDeclic(cons { numQ : numQuestion, reponse : newReponse }  listeDesReponse))
+         scores 
+         nbEssais}
+    
 update(EnvoiReponsesFormulaire  reponsesPartieActuelle scorePartieActuelle scores nbEssais ) =
-    if nbEssais < 3 
-    then 
        H.modify_ _{ stage = 
         ResultatUnePartie
           reponsesPartieActuelle 
           (cons scorePartieActuelle scores)
           nbEssais} 
-    else 
-      H.modify_ _{ stage = 
-          ScoreFinal scores}
+    
    
 
 
 update (RecommencerUnePartie scores nbEssais)   = 
-    H.modify_ _{ stage = 
-        Formulaire    [] scores (nbEssais + 1 )}
+  if nbEssais < 3 
+  then H.modify_ _{ stage = 
+        Formulaire     []  scores  (nbEssais + 1 )}
+  else  H.modify_ _{ stage = 
+        ScoreFinal scores}
 
       
 
@@ -81,7 +81,7 @@ update(EnvoiScore scoreEnvoye ) =
 
 update FormulaireVide   = 
   H.modify_ _{ stage = 
-      Formulaire   [] [] 1}
+      Formulaire  [] [] 1}
 
 
 renderNextButton :: forall m. Maybe Msg -> String -> H.ComponentHTML Msg () m
@@ -106,7 +106,7 @@ render {stage : Presentation } =
 
   
 
-render { stage  : Formulaire   arr scores nbEssais} =
+render { stage  : Formulaire    arr  scores   nbEssais} =
   HH.div[][
     
     HH.p_[HH.text $ "Ceci est votre essai numero " <>(show nbEssais)]    
@@ -158,9 +158,16 @@ render {stage : ResultatUnePartie l scores nbEssais} =
   ]
 
 render {stage : ScoreFinal listeDesScores } = 
-  HH.div_[
-    HH.p_ [HH.text("Votre moyenne est de : ")]
-  ,HH.div_ [HH.text(show ((foldr (+) 0.0  listeDesScores) / (toNumber (length listeDesScores))))]
-  ,renderNextButton (Just FormulaireVide) "Recommencer"
+  let 
+    scoresTries = sort listeDesScores
+    scoreMoinsBon = head scoresTries
+    scoreMeilleur = last scoresTries
+    moyenne = (foldr (+) 0.0  listeDesScores) / (toNumber (length listeDesScores))
+  in
+    HH.div_[
+      HH.p_ [HH.text(("Votre meilleur score est :  ") <> (show  scoreMeilleur)) ]
+    , HH.p_ [HH.text(("Votre moins bon score est :  ") <> (show scoreMoinsBon)) ]
+    ,HH.p_ [HH.text(("Votre moyenne est de : ") <> (show moyenne))]
+    ,renderNextButton (Just FormulaireVide) "Recommencer"
   ]
    

@@ -10,6 +10,7 @@ You can edit this file as you like.
   , "halogen-css"
   , "halogen-formless"
   , "psci-support"
+  , "record"
   , "strings"
   , "web-html"
   ]
