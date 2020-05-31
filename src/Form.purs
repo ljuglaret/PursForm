@@ -28,7 +28,7 @@ type State = { stage :: Stage }
 type NombreDessais = Int
 
 data Msg
-  =   FormulaireVide                -- Model  =   Presentation
+  =   FormulaireVide                -- Model  =   Presentation ou ScoreFinal
   |StockeReponse  Reponse      Int  -- Model  =   Formulaire
   | EnvoiReponsesFormulaire         -- Model  =   Formulaire
   | RecommencerUnePartie            -- Model  =   ResultatUnePartie
@@ -62,7 +62,6 @@ update(StockeReponse  newReponse  numQuestion) =
 
 
 update EnvoiReponsesFormulaire=
-
     H.modify_ (\state -> 
       case state of 
         {stage : Formulaire reponsesPartieActuelle  listeDesScores nbEssais} -> 
