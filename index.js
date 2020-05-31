@@ -7905,54 +7905,29 @@ var PS = {};
       return FormulaireVide;
   })();
   var StockeReponse = (function () {
-      function StockeReponse(value0, value1, value2, value3, value4) {
+      function StockeReponse(value0, value1) {
           this.value0 = value0;
           this.value1 = value1;
-          this.value2 = value2;
-          this.value3 = value3;
-          this.value4 = value4;
       };
       StockeReponse.create = function (value0) {
           return function (value1) {
-              return function (value2) {
-                  return function (value3) {
-                      return function (value4) {
-                          return new StockeReponse(value0, value1, value2, value3, value4);
-                      };
-                  };
-              };
+              return new StockeReponse(value0, value1);
           };
       };
       return StockeReponse;
   })();
   var EnvoiReponsesFormulaire = (function () {
-      function EnvoiReponsesFormulaire(value0, value1, value2, value3) {
-          this.value0 = value0;
-          this.value1 = value1;
-          this.value2 = value2;
-          this.value3 = value3;
+      function EnvoiReponsesFormulaire() {
+
       };
-      EnvoiReponsesFormulaire.create = function (value0) {
-          return function (value1) {
-              return function (value2) {
-                  return function (value3) {
-                      return new EnvoiReponsesFormulaire(value0, value1, value2, value3);
-                  };
-              };
-          };
-      };
+      EnvoiReponsesFormulaire.value = new EnvoiReponsesFormulaire();
       return EnvoiReponsesFormulaire;
   })();
   var RecommencerUnePartie = (function () {
-      function RecommencerUnePartie(value0, value1) {
-          this.value0 = value0;
-          this.value1 = value1;
+      function RecommencerUnePartie() {
+
       };
-      RecommencerUnePartie.create = function (value0) {
-          return function (value1) {
-              return new RecommencerUnePartie(value0, value1);
-          };
-      };
+      RecommencerUnePartie.value = new RecommencerUnePartie();
       return RecommencerUnePartie;
   })();
   var EnvoiScore = (function () {
@@ -8012,79 +7987,66 @@ var PS = {};
   })();
   var update = function (v) {
       if (v instanceof StockeReponse) {
-          return Control_Monad_State_Class.modify_(Halogen_Query_HalogenM.monadStateHalogenM)(function (v1) {
-              var $10 = {};
-              for (var $11 in v1) {
-                  if ({}.hasOwnProperty.call(v1, $11)) {
-                      $10[$11] = v1[$11];
+          return Control_Monad_State_Class.modify_(Halogen_Query_HalogenM.monadStateHalogenM)(function (state) {
+              if (state.stage instanceof Formulaire) {
+                  return {
+                      stage: new Formulaire(InfosReponses.enleveDeclic(Data_Array.cons({
+                          numQ: v.value1,
+                          reponse: v.value0
+                      })(state.stage.value0)), state.stage.value1, state.stage.value2)
                   };
               };
-              $10.stage = new Formulaire(InfosReponses.enleveDeclic(Data_Array.cons({
-                  numQ: v.value2,
-                  reponse: v.value0
-              })(v.value1)), v.value3, v.value4);
-              return $10;
+              return state;
           });
       };
       if (v instanceof EnvoiReponsesFormulaire) {
-          return Control_Monad_State_Class.modify_(Halogen_Query_HalogenM.monadStateHalogenM)(function (v1) {
-              var $18 = {};
-              for (var $19 in v1) {
-                  if ({}.hasOwnProperty.call(v1, $19)) {
-                      $18[$19] = v1[$19];
+          return Control_Monad_State_Class.modify_(Halogen_Query_HalogenM.monadStateHalogenM)(function (state) {
+              if (state.stage instanceof Formulaire) {
+                  return {
+                      stage: new ResultatUnePartie(state.stage.value0, Data_Array.cons(InfosReponses.score(state.stage.value0)(InfosReponses.listReponses))(state.stage.value1), state.stage.value2)
                   };
               };
-              $18.stage = new ResultatUnePartie(v.value0, Data_Array.cons(v.value1)(v.value2), v.value3);
-              return $18;
+              return state;
           });
       };
       if (v instanceof RecommencerUnePartie) {
-          var $25 = v.value1 < 3;
-          if ($25) {
-              return Control_Monad_State_Class.modify_(Halogen_Query_HalogenM.monadStateHalogenM)(function (v1) {
-                  var $26 = {};
-                  for (var $27 in v1) {
-                      if ({}.hasOwnProperty.call(v1, $27)) {
-                          $26[$27] = v1[$27];
+          return Control_Monad_State_Class.modify_(Halogen_Query_HalogenM.monadStateHalogenM)(function (state) {
+              if (state.stage instanceof ResultatUnePartie) {
+                  var $19 = state.stage.value2 < 3;
+                  if ($19) {
+                      return {
+                          stage: new Formulaire([  ], state.stage.value1, state.stage.value2 + 1 | 0)
                       };
                   };
-                  $26.stage = new Formulaire([  ], v.value0, v.value1 + 1 | 0);
-                  return $26;
-              });
-          };
-          return Control_Monad_State_Class.modify_(Halogen_Query_HalogenM.monadStateHalogenM)(function (v1) {
-              var $29 = {};
-              for (var $30 in v1) {
-                  if ({}.hasOwnProperty.call(v1, $30)) {
-                      $29[$30] = v1[$30];
+                  return {
+                      stage: new ScoreFinal(state.stage.value1)
                   };
               };
-              $29.stage = new ScoreFinal(v.value0);
-              return $29;
+              return state;
           });
       };
       if (v instanceof EnvoiScore) {
           return Control_Monad_State_Class.modify_(Halogen_Query_HalogenM.monadStateHalogenM)(function (v1) {
-              var $34 = {};
-              for (var $35 in v1) {
-                  if ({}.hasOwnProperty.call(v1, $35)) {
-                      $34[$35] = v1[$35];
+              var $24 = {};
+              for (var $25 in v1) {
+                  if ({}.hasOwnProperty.call(v1, $25)) {
+                      $24[$25] = v1[$25];
                   };
               };
-              $34.stage = new ScoreFinal(v.value0);
-              return $34;
+              $24.stage = new ScoreFinal(v.value0);
+              return $24;
           });
       };
       if (v instanceof FormulaireVide) {
           return Control_Monad_State_Class.modify_(Halogen_Query_HalogenM.monadStateHalogenM)(function (v1) {
-              var $38 = {};
-              for (var $39 in v1) {
-                  if ({}.hasOwnProperty.call(v1, $39)) {
-                      $38[$39] = v1[$39];
+              var $28 = {};
+              for (var $29 in v1) {
+                  if ({}.hasOwnProperty.call(v1, $29)) {
+                      $28[$29] = v1[$29];
                   };
               };
-              $38.stage = new Formulaire([  ], [  ], 1);
-              return $38;
+              $28.stage = new Formulaire([  ], [  ], 1);
+              return $28;
           });
       };
       throw new Error("Failed pattern match at Form (line 50, column 1 - line 50, column 63): " + [ v.constructor.name ]);
@@ -8098,7 +8060,7 @@ var PS = {};
               if (action instanceof Data_Maybe.Just) {
                   return [ Halogen_HTML_Events.onClick(Data_Function["const"](new Data_Maybe.Just(action.value0))) ];
               };
-              throw new Error("Failed pattern match at Form (line 90, column 5 - line 92, column 62): " + [ action.constructor.name ]);
+              throw new Error("Failed pattern match at Form (line 101, column 5 - line 103, column 62): " + [ action.constructor.name ]);
           })())([ Halogen_HTML_Core.text(texteBouton) ]);
       };
   };
@@ -8111,7 +8073,7 @@ var PS = {};
               return function (numRep) {
                   return function (numQuestion) {
                       return Halogen_HTML_Elements.div_([ Halogen_HTML_Elements.input([ Halogen_HTML_Properties.type_(Halogen_HTML_Core.isPropInputType)(DOM_HTML_Indexed_InputType.InputCheckbox.value), Halogen_HTML_Events.onChecked(function (b) {
-                          return Data_Maybe.Just.create(new StockeReponse(reponseDonnee, v.stage.value0, numQuestion, v.stage.value1, v.stage.value2));
+                          return Data_Maybe.Just.create(new StockeReponse(reponseDonnee, numQuestion));
                       }) ]), Halogen_HTML_Elements.label_([ Halogen_HTML_Core.text(InfosReponses.showReponse({
                           numQ: numQuestion,
                           reponse: reponseDonnee
@@ -8125,10 +8087,10 @@ var PS = {};
               return Halogen_HTML_Elements.div_([ Halogen_HTML_Elements.p_([ Halogen_HTML_Core.text(InfosReponses.showQuestion(intituleQuestion)) ]), Halogen_HTML_Elements.p_(Data_Functor.map(Data_Functor.functorArray)(function (record) {
                   return makeButton(record.reponse)(intituleReponse)(indice);
               })(intituleReponse.listeDesReponses)) ]);
-          })([ 1, 2 ])), renderNextButton(new Data_Maybe.Just(new EnvoiReponsesFormulaire(v.stage.value0, InfosReponses.score(v.stage.value0)(InfosReponses.listReponses), v.stage.value1, v.stage.value2)))("Score") ]);
+          })([ 1, 2 ])), renderNextButton(new Data_Maybe.Just(EnvoiReponsesFormulaire.value))("Score") ]);
       };
       if (v.stage instanceof ResultatUnePartie) {
-          return Halogen_HTML_Elements.div([ Halogen_HTML_Properties.id_("body") ])([ Halogen_HTML_Elements.div([ Halogen_HTML_Properties.id_("haut") ])([ Halogen_HTML_Elements.p_([ Halogen_HTML_Core.text("Votre score est de : " + Data_Show.show(Data_Show.showNumber)(InfosReponses.score(v.stage.value0)(InfosReponses.listReponses))) ]), Halogen_HTML_Elements.p_([ Halogen_HTML_Core.text("Voici la correction ") ]), Halogen_HTML_Elements.div_(InfosReponses.correction(v.stage.value0)(InfosReponses.listReponses)) ]), Halogen_HTML_Elements.div([ Halogen_HTML_Properties.id_("bas") ])([ renderNextButton(new Data_Maybe.Just(new RecommencerUnePartie(v.stage.value1, v.stage.value2)))("Recommencer"), renderNextButton(new Data_Maybe.Just(new EnvoiScore(v.stage.value1)))("Score Final") ]) ]);
+          return Halogen_HTML_Elements.div([ Halogen_HTML_Properties.id_("body") ])([ Halogen_HTML_Elements.div([ Halogen_HTML_Properties.id_("haut") ])([ Halogen_HTML_Elements.p_([ Halogen_HTML_Core.text("Votre score est de : " + Data_Show.show(Data_Show.showNumber)(InfosReponses.score(v.stage.value0)(InfosReponses.listReponses))) ]), Halogen_HTML_Elements.p_([ Halogen_HTML_Core.text("Voici la correction ") ]), Halogen_HTML_Elements.div_(InfosReponses.correction(v.stage.value0)(InfosReponses.listReponses)) ]), Halogen_HTML_Elements.div([ Halogen_HTML_Properties.id_("bas") ])([ renderNextButton(new Data_Maybe.Just(RecommencerUnePartie.value))("Recommencer"), renderNextButton(new Data_Maybe.Just(new EnvoiScore(v.stage.value1)))("Score Final") ]) ]);
       };
       if (v.stage instanceof ScoreFinal) {
           var scoresTries = Data_Array.sort(Data_Ord.ordNumber)(v.stage.value0);
@@ -8137,7 +8099,7 @@ var PS = {};
           var moyenne = Data_Foldable.foldr(Data_Foldable.foldableArray)(Data_Semiring.add(Data_Semiring.semiringNumber))(0.0)(v.stage.value0) / Data_Int.toNumber(Data_Array.length(v.stage.value0));
           return Halogen_HTML_Elements.div_([ Halogen_HTML_Elements.p_([ Halogen_HTML_Core.text("Votre meilleur score est :  " + Data_Show.show(Data_Maybe.showMaybe(Data_Show.showNumber))(scoreMeilleur)) ]), Halogen_HTML_Elements.p_([ Halogen_HTML_Core.text("Votre moins bon score est :  " + Data_Show.show(Data_Maybe.showMaybe(Data_Show.showNumber))(scoreMoinsBon)) ]), Halogen_HTML_Elements.p_([ Halogen_HTML_Core.text("Votre moyenne est de : " + Data_Show.show(Data_Show.showNumber)(moyenne)) ]), renderNextButton(new Data_Maybe.Just(FormulaireVide.value))("Recommencer") ]);
       };
-      throw new Error("Failed pattern match at Form (line 96, column 1 - line 96, column 54): " + [ v.constructor.name ]);
+      throw new Error("Failed pattern match at Form (line 107, column 1 - line 107, column 54): " + [ v.constructor.name ]);
   };
   var initialState = {
       stage: Presentation.value

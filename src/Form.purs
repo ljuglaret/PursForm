@@ -28,11 +28,11 @@ type State = { stage :: Stage }
 type NombreDessais = Int
 
 data Msg
-  =   FormulaireVide
-  |StockeReponse  Reponse     (Array EnregistreReponse) Int ListeDesScores NombreDessais
-  | EnvoiReponsesFormulaire      (Array EnregistreReponse) Number ListeDesScores NombreDessais
-  | RecommencerUnePartie          ListeDesScores NombreDessais
-  | EnvoiScore                    ListeDesScores
+  =   FormulaireVide                -- Model  =   Presentation
+  |StockeReponse  Reponse      Int  -- Model  =   Formulaire
+  | EnvoiReponsesFormulaire         -- Model  =   Formulaire
+  | RecommencerUnePartie            -- Model  =   ResultatUnePartie
+  | EnvoiScore   ListeDesScores     -- Model  =   ScoreFinal
 
 page ∷ forall m. H.Component HH.HTML (Const Void) Unit Void m 
 page = 
@@ -48,32 +48,43 @@ initialState = { stage : Presentation}
 
 
 update :: forall m. Msg -> H.HalogenM State Msg () Void m Unit
-update(StockeReponse  newReponse listeDesReponse numQuestion scores nbEssais) =
+
+update(StockeReponse  newReponse  numQuestion) =
+  H.modify_ (\state -> 
+    case state of 
+      {stage : Formulaire listeDesReponses listeDesScores nbEssais} -> 
+        { stage : 
+          Formulaire
+            (enleveDeclic(cons { numQ : numQuestion, reponse : newReponse }  listeDesReponses))
+            listeDesScores
+            nbEssais}
+      _ -> state)
+
+
+update EnvoiReponsesFormulaire=
+
+    H.modify_ (\state -> 
+      case state of 
+        {stage : Formulaire reponsesPartieActuelle  listeDesScores nbEssais} -> 
+          { stage : 
+            ResultatUnePartie
+              reponsesPartieActuelle 
+              (cons (score reponsesPartieActuelle listReponses) listeDesScores)
+              nbEssais}
+        _ -> state) 
   
-  H.modify_ _{ stage = 
-      Formulaire
-         (enleveDeclic(cons { numQ : numQuestion, reponse : newReponse }  listeDesReponse))
-         scores 
-         nbEssais}
-    
-update(EnvoiReponsesFormulaire  reponsesPartieActuelle scorePartieActuelle scores nbEssais ) =
-       H.modify_ _{ stage = 
-        ResultatUnePartie
-          reponsesPartieActuelle 
-          (cons scorePartieActuelle scores)
-          nbEssais} 
-    
-   
 
+update RecommencerUnePartie   = 
+  H.modify_ (\state -> 
+    case state of 
+      {stage : ResultatUnePartie listeDesReponses listeDesScores nbEssais} -> 
+          if nbEssais < 3 
+          then
+            { stage : Formulaire [] listeDesScores (nbEssais + 1 ) }
+          else
+            {stage : ScoreFinal listeDesScores}
+      _ -> state)
 
-update (RecommencerUnePartie scores nbEssais)   = 
-  if nbEssais < 3 
-  then H.modify_ _{ stage = 
-        Formulaire     []  scores  (nbEssais + 1 )}
-  else  H.modify_ _{ stage = 
-        ScoreFinal scores}
-
-      
 
 update(EnvoiScore scoreEnvoye ) = 
   H.modify_ _{ stage = 
@@ -130,7 +141,7 @@ render { stage  : Formulaire    arr  scores   nbEssais} =
         )
         [1,2]
     )
-    ,renderNextButton (Just (EnvoiReponsesFormulaire  arr (score arr listReponses ) scores nbEssais) )   "Score"
+    ,renderNextButton (Just EnvoiReponsesFormulaire )   "Score"
      ]
 
     where
@@ -138,7 +149,7 @@ render { stage  : Formulaire    arr  scores   nbEssais} =
         HH.div_  [
           HH.input [
             HP.type_ HP.InputCheckbox
-            , HE.onChecked (\b ->  Just $ StockeReponse   reponseDonnee  arr numQuestion scores nbEssais)
+            , HE.onChecked (\b ->  Just $ StockeReponse   reponseDonnee   numQuestion)
             ]
           , HH.label_ [ HH.text $ (showReponse {numQ : numQuestion , reponse : reponseDonnee } numRep numQuestion) ]
          ]
@@ -152,7 +163,7 @@ render {stage : ResultatUnePartie l scores nbEssais} =
         ,HH.div_ (correction l listReponses )
     ]
     ,HH.div[HP.id_ "bas"][
-      renderNextButton (Just (RecommencerUnePartie  scores nbEssais )) "Recommencer"
+      renderNextButton (Just RecommencerUnePartie ) "Recommencer"
       ,renderNextButton (Just (EnvoiScore scores)) "Score Final"
     ]
   ]
