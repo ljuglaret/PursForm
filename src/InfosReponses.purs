@@ -42,7 +42,7 @@ derive instance eqQuestion :: Eq Question
 showQuestion :: Question -> String 
 showQuestion question = 
   case question of 
-    Question1 ->  "Cochez la case si l'animal est un mamifère" 
+    Question1 ->  "Cochez la case si l'animal est un mammifère" 
     Question2 ->  "Cochez la case si l'animal mesure plus de 2 mètres"
 
 showReponse :: EnregistreReponse -> Resume -> Int ->  String
@@ -201,6 +201,7 @@ reponsesQ2 =
   ,{reponse : Reponse4  , nom : "Chien" , id: 3, correct : false, coeff: 1.0/4.0}]
   }
 
+listReponses :: Array Resume
 listReponses = [reponsesQ1, reponsesQ2]
 
 listQuestions :: Array Question
