@@ -67,7 +67,7 @@ indexUnsafeQ elt tab =
 showReponses :: Array EnregistreReponse -> Array Resume -> String
 showReponses reponsesEnregistrees reponsesFormulaire = 
   joinWith " " (map (\pl ->  
-      showReponse pl (indexUnsafe reponsesFormulaire (pl.numQ - 1) ) pl.numQ ) reponsesEnregistrees  )
+      showReponse pl (indexUnsafe reponsesFormulaire pl.numQ) pl.numQ)  reponsesEnregistrees  )
 
 
 associe :: Array Resume -> Reponse -> Int -> Int
@@ -175,11 +175,11 @@ correction  reponsesDonnees reponsesFormulaire =
                             ( maybe 0 (\tete -> tete.numQ) (head repF))))
               ]
         ,HH.div_(correctionQ repF reponsesFormulaire) ])
-    (map toArray (groupBy(\rec1 rec2  ->  rec1.numQ == rec2.numQ ) reponsesDonnees))
+    (map toArray (groupBy(\rec1 rec2  ->  rec1.numQ  == rec2.numQ  ) reponsesDonnees))
 
 reponsesQ1 :: Resume
 reponsesQ1 = 
-  {numeroQuestion : 1
+  {numeroQuestion : 0
   ,listeDesReponses :[
     {reponse : Reponse1 , nom : "Chien",  id: 0, correct : true,coeff : 1.0/5.0},
     {reponse : Reponse2  , nom : "Lezard" , id: 1, correct : false,coeff : 1.0/5.0},
@@ -192,7 +192,7 @@ reponsesQ1 =
 
 reponsesQ2 :: Resume
 reponsesQ2 = 
-  {numeroQuestion : 2
+  {numeroQuestion : 1
   ,listeDesReponses : [
   
   {reponse : Reponse1  , nom : "Cheval" , id: 0, correct : false, coeff: 1.0/4.0}

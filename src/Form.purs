@@ -13,26 +13,23 @@ import InfosReponses (EnregistreReponse, Reponse, Resume, Question, correction, 
 import Data.Int (toNumber)
 
 
-type AskReponseStage =  {reponse :: Maybe Reponse   }
 type ListeDesScores = Array Number
+type NumeroQuestion = Int 
 
 data Stage =  
             Presentation
-            |Formulaire        (Array EnregistreReponse)  ListeDesScores  NombreDessais 
-            |ResultatUnePartie  (Array EnregistreReponse) ListeDesScores  NombreDessais 
+            |Formulaire        (Array EnregistreReponse)  ListeDesScores 
+            |ResultatUnePartie  (Array EnregistreReponse) ListeDesScores  
             |ScoreFinal         ListeDesScores
 
 
 type State = { stage :: Stage }
 
-type NombreDessais = Int
-
 data Msg
   =   FormulaireVide                -- Model  =   Presentation ou ScoreFinal
-  |StockeReponse  Reponse      Int  -- Model  =   Formulaire
-  | EnvoiReponsesFormulaire         -- Model  =   Formulaire
+  |StockeReponse  Reponse  NumeroQuestion -- Model  =   Formulaire
+  | DemandeScore         -- Model  =   Formulaire ou ResultatUnePartie
   | RecommencerUnePartie            -- Model  =   ResultatUnePartie
-  | EnvoiScore   ListeDesScores     -- Model  =   ScoreFinal
 
 page ∷ forall m. H.Component HH.HTML (Const Void) Unit Void m 
 page = 
@@ -52,46 +49,50 @@ update :: forall m. Msg -> H.HalogenM State Msg () Void m Unit
 update(StockeReponse  newReponse  numQuestion) =
   H.modify_ (\state -> 
     case state of 
-      {stage : Formulaire listeDesReponses listeDesScores nbEssais} -> 
+      {stage : Formulaire listeDesReponses listeDesScores } -> 
         { stage : 
           Formulaire
             (enleveDeclic(cons { numQ : numQuestion, reponse : newReponse }  listeDesReponses))
             listeDesScores
-            nbEssais}
+            }
       _ -> state)
 
 
-update EnvoiReponsesFormulaire=
+update DemandeScore =
     H.modify_ (\state -> 
       case state of 
-        {stage : Formulaire reponsesPartieActuelle  listeDesScores nbEssais} -> 
+        {stage : Formulaire reponsesPartieActuelle  listeDesScores} -> 
           { stage : 
             ResultatUnePartie
               reponsesPartieActuelle 
               (cons (score reponsesPartieActuelle listReponses) listeDesScores)
-              nbEssais}
+              }
+        {stage : ResultatUnePartie _ listeDesScores} -> 
+          {
+            stage : 
+              ScoreFinal listeDesScores
+          }
+
         _ -> state) 
   
 
 update RecommencerUnePartie   = 
   H.modify_ (\state -> 
     case state of 
-      {stage : ResultatUnePartie listeDesReponses listeDesScores nbEssais} -> 
-          if nbEssais < 3 
+      {stage : ResultatUnePartie _ listeDesScores } -> 
+          if (length listeDesScores) < 3 
           then
-            { stage : Formulaire [] listeDesScores (nbEssais + 1 ) }
+            { stage : Formulaire [] listeDesScores  }
           else
             {stage : ScoreFinal listeDesScores}
       _ -> state)
 
 
-update(EnvoiScore scoreEnvoye ) = 
-  H.modify_ _{ stage = 
-      ScoreFinal scoreEnvoye }
+
 
 update FormulaireVide   = 
   H.modify_ _{ stage = 
-      Formulaire  [] [] 1}
+      Formulaire  [] [] }
 
 
 renderNextButton :: forall m. Maybe Msg -> String -> H.ComponentHTML Msg () m
@@ -116,19 +117,19 @@ render {stage : Presentation } =
 
   
 
-render { stage  : Formulaire    arr  scores   nbEssais} =
+render { stage  : Formulaire    arr  scores   } =
   HH.div[][
     
-    HH.p_[HH.text $ "Ceci est votre essai numero " <>(show nbEssais)]    
+    HH.p_[HH.text $ "Ceci est votre essai numero " <>(show ((length scores) + 1)) ]    
     ,HH.div[] (
       map
          (\indice ->
             let 
               intituleQuestion :: Question
-              intituleQuestion  = indexUnsafeQ listQuestions (indice - 1 )
+              intituleQuestion  = indexUnsafeQ listQuestions indice
               
               intituleReponse :: Resume
-              intituleReponse   = indexUnsafe  listReponses  (indice - 1 )
+              intituleReponse   = indexUnsafe  listReponses  indice
             in
               HH.div_[
                 HH.p_[HH.text $ showQuestion  intituleQuestion ]
@@ -138,9 +139,9 @@ render { stage  : Formulaire    arr  scores   nbEssais} =
                         intituleReponse.listeDesReponses)
               ]
         )
-        [1,2]
+        [0,1]
     )
-    ,renderNextButton (Just EnvoiReponsesFormulaire )   "Score"
+    ,renderNextButton (Just DemandeScore )   "Score"
      ]
 
     where
@@ -154,7 +155,7 @@ render { stage  : Formulaire    arr  scores   nbEssais} =
          ]
           
 
-render {stage : ResultatUnePartie l scores nbEssais} = 
+render {stage : ResultatUnePartie l scores} = 
   HH.div[HP.id_ "body"] [
     HH.div[HP.id_ "haut"][
         HH.p_[HH.text ("Votre score est de : " <> (show (score l listReponses )))]
@@ -163,7 +164,7 @@ render {stage : ResultatUnePartie l scores nbEssais} =
     ]
     ,HH.div[HP.id_ "bas"][
       renderNextButton (Just RecommencerUnePartie ) "Recommencer"
-      ,renderNextButton (Just (EnvoiScore scores)) "Score Final"
+      ,renderNextButton (Just DemandeScore) "Score Final"
     ]
   ]
 

@@ -7569,7 +7569,7 @@ var PS = {};
       throw new Error("Failed pattern match at InfosReponses (line 44, column 3 - line 46, column 71): " + [ question.constructor.name ]);
   };
   var reponsesQ2 = {
-      numeroQuestion: 2,
+      numeroQuestion: 1,
       listeDesReponses: [ {
           reponse: Reponse1.value,
           nom: "Cheval",
@@ -7597,7 +7597,7 @@ var PS = {};
       } ]
   };
   var reponsesQ1 = {
-      numeroQuestion: 1,
+      numeroQuestion: 0,
       listeDesReponses: [ {
           reponse: Reponse1.value,
           nom: "Chien",
@@ -7725,7 +7725,7 @@ var PS = {};
   var showReponses = function (reponsesEnregistrees) {
       return function (reponsesFormulaire) {
           return Data_String_Common.joinWith(" ")(Data_Functor.map(Data_Functor.functorArray)(function (pl) {
-              return showReponse(pl)(indexUnsafe(reponsesFormulaire)(pl.numQ - 1 | 0))(pl.numQ);
+              return showReponse(pl)(indexUnsafe(reponsesFormulaire)(pl.numQ))(pl.numQ);
           })(reponsesEnregistrees));
       };
   }; 
@@ -7916,12 +7916,12 @@ var PS = {};
       };
       return StockeReponse;
   })();
-  var EnvoiReponsesFormulaire = (function () {
-      function EnvoiReponsesFormulaire() {
+  var DemandeScore = (function () {
+      function DemandeScore() {
 
       };
-      EnvoiReponsesFormulaire.value = new EnvoiReponsesFormulaire();
-      return EnvoiReponsesFormulaire;
+      DemandeScore.value = new DemandeScore();
+      return DemandeScore;
   })();
   var RecommencerUnePartie = (function () {
       function RecommencerUnePartie() {
@@ -7929,15 +7929,6 @@ var PS = {};
       };
       RecommencerUnePartie.value = new RecommencerUnePartie();
       return RecommencerUnePartie;
-  })();
-  var EnvoiScore = (function () {
-      function EnvoiScore(value0) {
-          this.value0 = value0;
-      };
-      EnvoiScore.create = function (value0) {
-          return new EnvoiScore(value0);
-      };
-      return EnvoiScore;
   })();
   var Presentation = (function () {
       function Presentation() {
@@ -7947,31 +7938,25 @@ var PS = {};
       return Presentation;
   })();
   var Formulaire = (function () {
-      function Formulaire(value0, value1, value2) {
+      function Formulaire(value0, value1) {
           this.value0 = value0;
           this.value1 = value1;
-          this.value2 = value2;
       };
       Formulaire.create = function (value0) {
           return function (value1) {
-              return function (value2) {
-                  return new Formulaire(value0, value1, value2);
-              };
+              return new Formulaire(value0, value1);
           };
       };
       return Formulaire;
   })();
   var ResultatUnePartie = (function () {
-      function ResultatUnePartie(value0, value1, value2) {
+      function ResultatUnePartie(value0, value1) {
           this.value0 = value0;
           this.value1 = value1;
-          this.value2 = value2;
       };
       ResultatUnePartie.create = function (value0) {
           return function (value1) {
-              return function (value2) {
-                  return new ResultatUnePartie(value0, value1, value2);
-              };
+              return new ResultatUnePartie(value0, value1);
           };
       };
       return ResultatUnePartie;
@@ -7993,17 +7978,22 @@ var PS = {};
                       stage: new Formulaire(InfosReponses.enleveDeclic(Data_Array.cons({
                           numQ: v.value1,
                           reponse: v.value0
-                      })(state.stage.value0)), state.stage.value1, state.stage.value2)
+                      })(state.stage.value0)), state.stage.value1)
                   };
               };
               return state;
           });
       };
-      if (v instanceof EnvoiReponsesFormulaire) {
+      if (v instanceof DemandeScore) {
           return Control_Monad_State_Class.modify_(Halogen_Query_HalogenM.monadStateHalogenM)(function (state) {
               if (state.stage instanceof Formulaire) {
                   return {
-                      stage: new ResultatUnePartie(state.stage.value0, Data_Array.cons(InfosReponses.score(state.stage.value0)(InfosReponses.listReponses))(state.stage.value1), state.stage.value2)
+                      stage: new ResultatUnePartie(state.stage.value0, Data_Array.cons(InfosReponses.score(state.stage.value0)(InfosReponses.listReponses))(state.stage.value1))
+                  };
+              };
+              if (state.stage instanceof ResultatUnePartie) {
+                  return {
+                      stage: new ScoreFinal(state.stage.value1)
                   };
               };
               return state;
@@ -8012,10 +8002,10 @@ var PS = {};
       if (v instanceof RecommencerUnePartie) {
           return Control_Monad_State_Class.modify_(Halogen_Query_HalogenM.monadStateHalogenM)(function (state) {
               if (state.stage instanceof ResultatUnePartie) {
-                  var $19 = state.stage.value2 < 3;
+                  var $19 = Data_Array.length(state.stage.value1) < 3;
                   if ($19) {
                       return {
-                          stage: new Formulaire([  ], state.stage.value1, state.stage.value2 + 1 | 0)
+                          stage: new Formulaire([  ], state.stage.value1)
                       };
                   };
                   return {
@@ -8025,31 +8015,19 @@ var PS = {};
               return state;
           });
       };
-      if (v instanceof EnvoiScore) {
-          return Control_Monad_State_Class.modify_(Halogen_Query_HalogenM.monadStateHalogenM)(function (v1) {
-              var $24 = {};
-              for (var $25 in v1) {
-                  if ({}.hasOwnProperty.call(v1, $25)) {
-                      $24[$25] = v1[$25];
-                  };
-              };
-              $24.stage = new ScoreFinal(v.value0);
-              return $24;
-          });
-      };
       if (v instanceof FormulaireVide) {
           return Control_Monad_State_Class.modify_(Halogen_Query_HalogenM.monadStateHalogenM)(function (v1) {
-              var $28 = {};
-              for (var $29 in v1) {
-                  if ({}.hasOwnProperty.call(v1, $29)) {
-                      $28[$29] = v1[$29];
+              var $23 = {};
+              for (var $24 in v1) {
+                  if ({}.hasOwnProperty.call(v1, $24)) {
+                      $23[$24] = v1[$24];
                   };
               };
-              $28.stage = new Formulaire([  ], [  ], 1);
-              return $28;
+              $23.stage = new Formulaire([  ], [  ]);
+              return $23;
           });
       };
-      throw new Error("Failed pattern match at Form (line 50, column 1 - line 50, column 63): " + [ v.constructor.name ]);
+      throw new Error("Failed pattern match at Form (line 47, column 1 - line 47, column 63): " + [ v.constructor.name ]);
   };
   var renderNextButton = function (action) {
       return function (texteBouton) {
@@ -8081,16 +8059,16 @@ var PS = {};
                   };
               };
           };
-          return Halogen_HTML_Elements.div([  ])([ Halogen_HTML_Elements.p_([ Halogen_HTML_Core.text("Ceci est votre essai numero " + Data_Show.show(Data_Show.showInt)(v.stage.value2)) ]), Halogen_HTML_Elements.div([  ])(Data_Functor.map(Data_Functor.functorArray)(function (indice) {
-              var intituleReponse = InfosReponses.indexUnsafe(InfosReponses.listReponses)(indice - 1 | 0);
-              var intituleQuestion = InfosReponses.indexUnsafeQ(InfosReponses.listQuestions)(indice - 1 | 0);
+          return Halogen_HTML_Elements.div([  ])([ Halogen_HTML_Elements.p_([ Halogen_HTML_Core.text("Ceci est votre essai numero " + Data_Show.show(Data_Show.showInt)(Data_Array.length(v.stage.value1) + 1 | 0)) ]), Halogen_HTML_Elements.div([  ])(Data_Functor.map(Data_Functor.functorArray)(function (indice) {
+              var intituleReponse = InfosReponses.indexUnsafe(InfosReponses.listReponses)(indice);
+              var intituleQuestion = InfosReponses.indexUnsafeQ(InfosReponses.listQuestions)(indice);
               return Halogen_HTML_Elements.div_([ Halogen_HTML_Elements.p_([ Halogen_HTML_Core.text(InfosReponses.showQuestion(intituleQuestion)) ]), Halogen_HTML_Elements.p_(Data_Functor.map(Data_Functor.functorArray)(function (record) {
                   return makeButton(record.reponse)(intituleReponse)(indice);
               })(intituleReponse.listeDesReponses)) ]);
-          })([ 1, 2 ])), renderNextButton(new Data_Maybe.Just(EnvoiReponsesFormulaire.value))("Score") ]);
+          })([ 0, 1 ])), renderNextButton(new Data_Maybe.Just(DemandeScore.value))("Score") ]);
       };
       if (v.stage instanceof ResultatUnePartie) {
-          return Halogen_HTML_Elements.div([ Halogen_HTML_Properties.id_("body") ])([ Halogen_HTML_Elements.div([ Halogen_HTML_Properties.id_("haut") ])([ Halogen_HTML_Elements.p_([ Halogen_HTML_Core.text("Votre score est de : " + Data_Show.show(Data_Show.showNumber)(InfosReponses.score(v.stage.value0)(InfosReponses.listReponses))) ]), Halogen_HTML_Elements.p_([ Halogen_HTML_Core.text("Voici la correction ") ]), Halogen_HTML_Elements.div_(InfosReponses.correction(v.stage.value0)(InfosReponses.listReponses)) ]), Halogen_HTML_Elements.div([ Halogen_HTML_Properties.id_("bas") ])([ renderNextButton(new Data_Maybe.Just(RecommencerUnePartie.value))("Recommencer"), renderNextButton(new Data_Maybe.Just(new EnvoiScore(v.stage.value1)))("Score Final") ]) ]);
+          return Halogen_HTML_Elements.div([ Halogen_HTML_Properties.id_("body") ])([ Halogen_HTML_Elements.div([ Halogen_HTML_Properties.id_("haut") ])([ Halogen_HTML_Elements.p_([ Halogen_HTML_Core.text("Votre score est de : " + Data_Show.show(Data_Show.showNumber)(InfosReponses.score(v.stage.value0)(InfosReponses.listReponses))) ]), Halogen_HTML_Elements.p_([ Halogen_HTML_Core.text("Voici la correction ") ]), Halogen_HTML_Elements.div_(InfosReponses.correction(v.stage.value0)(InfosReponses.listReponses)) ]), Halogen_HTML_Elements.div([ Halogen_HTML_Properties.id_("bas") ])([ renderNextButton(new Data_Maybe.Just(RecommencerUnePartie.value))("Recommencer"), renderNextButton(new Data_Maybe.Just(DemandeScore.value))("Score Final") ]) ]);
       };
       if (v.stage instanceof ScoreFinal) {
           var scoresTries = Data_Array.sort(Data_Ord.ordNumber)(v.stage.value0);
